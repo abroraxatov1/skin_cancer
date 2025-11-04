@@ -63,7 +63,7 @@ st.markdown(f"""
         background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.3)'} !important;
         color: white !important;
         border: 1.5px solid #4b6cb7 !important;
-        padding: 0.7rem 1.2rem !important;
+         
         border-radius: 12px !important;
         font-weight: 600 !important;
         font-size: 0.95rem !important;
@@ -389,6 +389,7 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
 
 
 
