@@ -37,142 +37,171 @@ def get_base64_image(image_path):
         return base64.b64encode(img_file.read()).decode()
 
 # === Zamonaviy CSS (to'g'ri ishlaydi) ===
+# === Zamonaviy va tartibli CSS (faqat dizayn qismi yangilandi) ===
 st.markdown(f"""
 <style>
+    /* Umumiy ilova stili */
     .stApp {{
-        background: {'#0e1117' if st.session_state.dark_mode else 'linear-gradient(135deg, #8EC5FC, #E0C3FC)'};
+        background: {'#0e1117' if st.session_state.dark_mode else 'linear-gradient(135deg, #8EC5FC, #E0C3FC)'} !important;
         min-height: 100vh;
         font-family: 'Inter', sans-serif;
+        color: {'#e6e6e6' if st.session_state.dark_mode else '#222'};
     }}
+
+    /* Sarlavha */
     .header {{
         text-align: center;
-        color: {'#ffffff' if st.session_state.dark_mode else 'white'};
-        font-size: 2.5rem;
+        color: {'#ffffff' if st.session_state.dark_mode else '#ffffff'};
+        font-size: 2.6rem;
         font-weight: 800;
-        margin: 1rem 0 1.5rem;
-        text-shadow: {'none' if st.session_state.dark_mode else '0 2px 4px rgba(0,0,0,0.3)'};
+        margin: 2rem 0 1rem;
+        letter-spacing: 1px;
     }}
-    /* Navbar tugmalari – bir xil o‘lcham */
+
+    /* Navbar tugmalari */
     div[data-testid="column"] > div > div > button {{
-        background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.25)'} !important;
+        background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.3)'} !important;
         color: white !important;
-        border: 2px solid #4b6cb7 !important;
-        padding: 0.8rem 1.2rem !important;
-        border-radius: 14px !important;
+        border: 1.5px solid #4b6cb7 !important;
+        padding: 0.7rem 1.2rem !important;
+        border-radius: 12px !important;
         font-weight: 600 !important;
-        font-size: 1rem !important;
-        max-width: 240px !important;
-        height: 52px !important;
+        font-size: 0.95rem !important;
         width: 100% !important;
-        backdrop-filter: blur(10px) !important;
-        transition: all 0.3s !important;
-        margin: 0.4rem auto !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        transition: all 0.25s ease !important;
+        margin: 0.3rem 0.2rem !important;
     }}
     div[data-testid="column"] > div > div > button:hover {{
         background: #4b6cb7 !important;
-        transform: translateY(-3px) !important;
-        box-shadow: 0 8px 20px rgba(75, 108, 183, 0.4) !important;
+        box-shadow: 0 6px 16px rgba(75,108,183,0.4) !important;
+        transform: translateY(-2px);
     }}
+
     /* Info kartalar */
     .info-card {{
-        background: {'rgba(30, 33, 43, 0.9)' if st.session_state.dark_mode else 'rgba(255,255,255,0.35)'};
-        padding: 1.8rem;
-        border-radius: 18px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        backdrop-filter: blur(12px);
-        transition: all 0.3s;
+        background: {'rgba(30, 33, 43, 0.95)' if st.session_state.dark_mode else 'rgba(255,255,255,0.45)'};
+        padding: 1.6rem;
+        border-radius: 16px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        backdrop-filter: blur(10px);
         text-align: center;
+        transition: all 0.3s ease;
         height: 100%;
-        border: 1px solid {'rgba(255,255,255,0.1)' if st.session_state.dark_mode else 'rgba(255,255,255,0.4)'};
     }}
     .info-card:hover {{
-        transform: translateY(-8px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        transform: translateY(-6px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.18);
     }}
     .info-card img {{
         width: 100%;
-        height: 180px;
+        height: 170px;
         object-fit: cover;
-        border-radius: 14px;
-        margin-bottom: 1rem;
+        border-radius: 12px;
+        margin-bottom: 0.8rem;
         border: 2px solid #4b6cb7;
     }}
     .info-card h4 {{
-        margin: 0.8rem 0 0.5rem;
+        margin: 0.6rem 0 0.3rem;
         color: #4b6cb7;
         font-weight: 700;
+        font-size: 1.05rem;
     }}
     .info-card p {{
-        font-size: 0.95rem;
-        color: {'#e0e0e0' if st.session_state.dark_mode else '#333'};
-        line-height: 1.5;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: {'#dcdcdc' if st.session_state.dark_mode else '#222'};
     }}
+
+    /* Natija qutisi */
     .result-box {{
-        background: {'#1e212b' if st.session_state.dark_mode else 'rgba(255,255,255,0.9)'};
+        background: {'#1b1e27' if st.session_state.dark_mode else 'rgba(255,255,255,0.92)'};
         padding: 2rem;
         border-radius: 18px;
         text-align: center;
-        margin: 1.5rem 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        border: 1px solid #4b6cb7;
+        margin: 2rem auto;
+        max-width: 600px;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.15);
+        border: 1px solid rgba(75,108,183,0.4);
     }}
-    .result-img {{
-        border-radius: 16px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        margin: 1rem auto;
-        max-width: 380px;
-        border: 3px solid #4b6cb7;
+    .result-box h2 {{
+        margin: 0.3rem 0;
+        font-weight: 700;
+        color: #ff0066;
     }}
+
+    /* Tarix elementlari */
     .history-item {{
-        background: {'#1a1d26' if st.session_state.dark_mode else 'rgba(255,255,255,0.25)'};
-        border-radius: 16px;
-        padding: 1.2rem;
-        margin: 1rem 0;
+        background: {'#1a1d26' if st.session_state.dark_mode else 'rgba(255,255,255,0.3)'};
+        border-radius: 14px;
+        padding: 1.1rem;
+        margin: 0.8rem 0;
         text-align: center;
-        color: white;
         border: 1px solid rgba(75,108,183,0.3);
+        transition: all 0.3s ease;
+    }}
+    .history-item:hover {{
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(75,108,183,0.25);
     }}
     .history-item img {{
-        border-radius: 12px;
-        margin-bottom: 0.6rem;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
         border: 2px solid #4b6cb7;
-        max-width: 100%;
+        width: 100%;
     }}
+
+    /* Tugmalar */
     .stButton > button {{
         background: #4b6cb7 !important;
         color: white !important;
-        border-radius: 14px !important;
+        border-radius: 12px !important;
         font-weight: 600 !important;
-        padding: 0.8rem 2rem !important;
-        width: 100% !important;
+        padding: 0.75rem 2rem !important;
         border: 2px solid #4b6cb7 !important;
+        transition: all 0.3s ease;
     }}
     .stButton > button:hover {{
         background: #182848 !important;
         border-color: #182848 !important;
     }}
+
+    /* Aloqa kartasi */
+    .contact-card {{
+        background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.3)'};
+        padding: 2rem;
+        border-radius: 18px;
+        text-align: center;
+        border: 1px solid rgba(75,108,183,0.3);
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        backdrop-filter: blur(12px);
+    }}
+
+    /* Footer */
     .footer {{
         text-align: center;
-        color: {'#aaa' if st.session_state.dark_mode else 'white'};
-        margin-top: 4rem;
+        color: {'#aaa' if st.session_state.dark_mode else '#333'};
+        margin-top: 3rem;
         font-size: 0.9rem;
         opacity: 0.8;
+        padding-bottom: 2rem;
     }}
+
+    /* Dark mode toggle */
     .dark-toggle {{
         position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 1000;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 999;
         background: rgba(0,0,0,0.3);
         border-radius: 50px;
-        padding: 0.5rem;
+        padding: 0.5rem 0.8rem;
     }}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
+
 
 # === Dark Mode Toggle ===
 with st.container():
@@ -360,6 +389,7 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
 
 
 
