@@ -29,7 +29,7 @@ st.set_page_config(
 # === CSS – Sodda va chiroyli dizayn ===
 st.markdown("""
 <style>
-    .main {
+    .body {
         background: linear-gradient(135deg, #8EC5FC, #E0C3FC);
         padding: 2rem;
         min-height: 100vh;
@@ -261,3 +261,4 @@ elif st.session_state.page == 'contact':
 
 # === Footer ===
 st.markdown("<div class='footer'>© 2025 Skin Cancer AI Detector — Barcha huquqlar himoyalangan</div>", unsafe_allow_html=True)
+
