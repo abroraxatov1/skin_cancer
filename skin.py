@@ -202,7 +202,7 @@ def home_page():
     cards = [
         ("Melanoma", "Eng xavfli turi. Rangi o‘zgaruvchi, assimetrik dog‘lar bilan namoyon bo‘ladi.",
          "https://img.lb.wbmdstatic.com/vim/live/webmd/consumer_assets/site_images/article_thumbnails/reference_guide/malignant_melanoma_ref_guide/1800x1200_malignant_melanoma_ref_guide.jpg"),
-        ("BCC", "Eng ko‘p uchraydigan turi. Odatda yuzda oqish yoki qon ketadigan dog‘ sifatida paydo bo‘ladi.",
+        ("BCC", "Eng ko‘p uchraydigan turi. Odatda yuzda oqish dog‘ sifatida paydo bo‘ladi.",
          "https://mismosavama.net/wp-content/uploads/2022/05/bazalni-1.webp"),
         ("SCC", "Qattiq qizil shishlar yoki yara ko‘rinishida. Quyosh nuri bilan kuchayadi.",
          "https://citydermatologyclinic.com/wp-content/uploads/2025/09/Squamous-Cell-Carcinoma-1024x1024.jpg"),
@@ -361,5 +361,6 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
 
 
