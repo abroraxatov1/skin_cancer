@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =======================================================
-# Skin Cancer AI Detector – Navbar shaffof, rasmlar tartibli
+# Skin Cancer AI Detector – To'liq to'g'rilangan & Professional
 # =======================================================
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
@@ -31,101 +31,87 @@ if 'page' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False
 
-# === Zamonaviy CSS – yangilangan ===
+# === Fon rasmini base64 ga aylantirish (ixtiyoriy) ===
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+# === Zamonaviy CSS (to'g'ri ishlaydi) ===
 st.markdown(f"""
 <style>
     .stApp {{
         background: {'#0e1117' if st.session_state.dark_mode else 'linear-gradient(135deg, #8EC5FC, #E0C3FC)'};
         min-height: 100vh;
         font-family: 'Inter', sans-serif;
-        padding: 1.5rem 1rem;
     }}
     .header {{
         text-align: center;
         color: {'#ffffff' if st.session_state.dark_mode else 'white'};
-        font-size: 2.6rem;
+        font-size: 2.8rem;
         font-weight: 800;
-        margin: 0.5rem 0 1.2rem;
+        margin: 1rem 0 1.5rem;
         text-shadow: {'none' if st.session_state.dark_mode else '0 2px 4px rgba(0,0,0,0.3)'};
     }}
-
-    /* === NAVBAR – shaffof, o‘rtada, bir xil masofa === */
-    .nav-container {{
-        display: flex;
-        justify-content: center;
-        gap: 1.8rem;
-        flex-wrap: wrap;
-        margin: 1.5rem 0;
-        padding: 0 1rem;
-    }}
-    .nav-item {{
-        background: rgba(255, 255, 255, 0.12) !important;
+    /* Navbar tugmalari – bir xil o‘lcham */
+    div[data-testid="column"] > div > div > button {{
+        background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.25)'} !important;
         color: white !important;
         border: 2px solid #4b6cb7 !important;
-        padding: 0.85rem 1.4rem !important;
-        border-radius: 16px !important;
-        font-weight: 700 !important;
-        font-size: 1.15rem !important;
-        min-width: 150px;
-        height: 56px;
-        backdrop-filter: blur(12px);
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 0.8rem 1.2rem !important;
+        border-radius: 14px !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        min-width: 140px !important;
+        height: 52px !important;
+        width: 100% !important;
+        backdrop-filter: blur(10px) !important;
+        transition: all 0.3s !important;
+        margin: 0.4rem auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
-    .nav-item:hover {{
+    div[data-testid="column"] > div > div > button:hover {{
         background: #4b6cb7 !important;
-        transform: translateY(-4px);
-        box-shadow: 0 10px 22px rgba(75, 108, 183, 0.35) !important;
-    }}
-    .nav-item.active {{
-        background: #4b6cb7 !important;
+        transform: translateY(-3px) !important;
         box-shadow: 0 8px 20px rgba(75, 108, 183, 0.4) !important;
-        transform: translateY(-2px);
     }}
-
-    /* === KARTALAR – shaffof fon, bir xil o‘lcham === */
+    /* Info kartalar */
     .info-card {{
-        background: {'rgba(30, 33, 43, 0.75)' if st.session_state.dark_mode else 'rgba(255, 255, 255, 0.28)'};
-        padding: 1.6rem;
-        border-radius: 20px;
+        background: {'rgba(30, 33, 43, 0.9)' if st.session_state.dark_mode else 'rgba(255,255,255,0.35)'};
+        padding: 1.8rem;
+        border-radius: 18px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        backdrop-filter: blur(12px);
+        transition: all 0.3s;
         text-align: center;
         height: 100%;
-        border: 1px solid {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.5)'};
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        border: 1px solid {'rgba(255,255,255,0.1)' if st.session_state.dark_mode else 'rgba(255,255,255,0.4)'};
     }}
     .info-card:hover {{
-        transform: translateY(-6px);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     }}
     .info-card img {{
-        width: 100% !important;
-        height: 220px !important;
-        object-fit: cover !important;
-        border-radius: 16px !important;
-        border: 3px solid #4b6cb7 !important;
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 14px;
         margin-bottom: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 2px solid #4b6cb7;
     }}
     .info-card h4 {{
-        margin: 0.7rem 0 0.4rem;
+        margin: 0.8rem 0 0.5rem;
         color: #4b6cb7;
         font-weight: 700;
-        font-size: 1.35rem;
     }}
     .info-card p {{
-        font-size: 0.98rem;
-        color: {'#e0e0e0' if st.session_state.dark_mode else '#222'};
-        line-height: 1.55;
-        margin: 0;
+        font-size: 0.95rem;
+        color: {'#e0e0e0' if st.session_state.dark_mode else '#333'};
+        line-height: 1.5;
     }}
-
     .result-box {{
-        background: {'#1e212b' if st.session_state.dark_mode else 'rgba(255,255,255,0.92)'};
+        background: {'#1e212b' if st.session_state.dark_mode else 'rgba(255,255,255,0.9)'};
         padding: 2rem;
         border-radius: 18px;
         text-align: center;
@@ -137,8 +123,7 @@ st.markdown(f"""
         border-radius: 16px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.2);
         margin: 1rem auto;
-        max-width: 100%;
-        width: 420px;
+        max-width: 380px;
         border: 3px solid #4b6cb7;
     }}
     .history-item {{
@@ -155,18 +140,15 @@ st.markdown(f"""
         margin-bottom: 0.6rem;
         border: 2px solid #4b6cb7;
         max-width: 100%;
-        height: 180px;
-        object-fit: cover;
     }}
     .stButton > button {{
         background: #4b6cb7 !important;
         color: white !important;
         border-radius: 14px !important;
         font-weight: 600 !important;
-        padding: 0.9rem 2rem !important;
+        padding: 0.8rem;
         width: 100% !important;
         border: 2px solid #4b6cb7 !important;
-        font-size: 1.1rem !important;
     }}
     .stButton > button:hover {{
         background: #182848 !important;
@@ -176,8 +158,8 @@ st.markdown(f"""
         text-align: center;
         color: {'#aaa' if st.session_state.dark_mode else 'white'};
         margin-top: 4rem;
-        font-size: 0.95rem;
-        opacity: 0.85;
+        font-size: 0.9rem;
+        opacity: 0.8;
     }}
     .dark-toggle {{
         position: fixed;
@@ -198,38 +180,23 @@ with st.container():
     with col2:
         if st.button("Dark" if not st.session_state.dark_mode else "Light", key="theme"):
             st.session_state.dark_mode = not st.session_state.dark_mode
-            st.rerun()
+            st.rerun()  # st.experimental_rerun() o'rniga
 
-# === NAVBAR – shaffof, o‘rtada, bir xil masofa ===
+# === Navbar ===
 def show_nav():
     st.markdown("<div class='header'>Skin Cancer AI Detector</div>", unsafe_allow_html=True)
-    
-    nav_items = [
-        ("Bosh sahifa", 'home'),
-        ("AI Tekshiruv", 'ai'),
-        ("Tarix", 'history'),
-        ("Aloqa", 'contact'),
-        ("Chiqish", 'home')
-    ]
-    
-    nav_html = "<div class='nav-container'>"
-    for text, page in nav_items:
-        is_active = st.session_state.page == page
-        active_class = "active" if is_active else ""
-        nav_html += f"""
-        <div class='nav-item {active_class}' onclick="document.getElementById('nav_{page}').click()">
-            {text}
-        </div>
-        <button id="nav_{page}" style="display:none" onclick="st.session_state.page='{page}'; st.rerun()"></button>
-        """
-    nav_html += "</div>"
-    
-    st.markdown(nav_html, unsafe_allow_html=True)
-    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,#4b6cb7,transparent);margin:2rem 0;'>", unsafe_allow_html=True)
+    cols = st.columns(5)
+    nav_items = ["Bosh sahifa", "AI Tekshiruv", "Tarix", "Aloqa", "Chiqish"]
+    pages = ['home', 'ai', 'history', 'contact', 'home']
+    for col, text, page in zip(cols, nav_items, pages):
+        with col:
+            if st.button(text, key=f"nav_{text}"):
+                st.session_state.page = page
+    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,#4b6cb7,transparent);margin:1.5rem 0;'>", unsafe_allow_html=True)
 
 # === Bosh sahifa ===
 def home_page():
-    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.8rem;'>Teri saratoni turlari</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.5rem;'>Teri saratoni turlari</h2>", unsafe_allow_html=True)
     
     cards = [
         ("Melanoma", "Eng xavfli turi. Rangi o‘zgaruvchi, assimetrik dog‘lar bilan namoyon bo‘ladi.",
@@ -299,10 +266,10 @@ def ai_page():
                         img = Image.open(img_path)
                         draw = ImageDraw.Draw(img)
                         try:
-                            font = ImageFont.truetype("arial.ttf", 42)
+                            font = ImageFont.truetype("arial.ttf", 40)
                         except:
                             font = ImageFont.load_default()
-                        draw.text((22, 22), f"{label} ({conf:.1f}%)", fill="#ff0066", font=font, stroke_width=3, stroke_fill="black")
+                        draw.text((20, 20), f"{label} ({conf:.1f}%)", fill="#ff0066", font=font, stroke_width=3, stroke_fill="black")
 
                         result_name = f"result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                         result_path = os.path.join(OUTPUT_DIR, result_name)
@@ -315,14 +282,14 @@ def ai_page():
                         <div class='result-box'>
                             <h3 style='color:#4b6cb7;margin:0;'>Natija</h3>
                             <h2 style='color:#ff0066;margin:0.5rem 0;'>{label}</h2>
-                            <p style='font-size:1.3rem;'><b>{conf:.1f}%</b> ishonch bilan</p>
+                            <p style='font-size:1.2rem;'><b>{conf:.1f}%</b> ishonch bilan</p>
                         </div>
                         """, unsafe_allow_html=True)
 
-                        st.image(result_path, caption="Tahlil natijasi", width=420)
+                        st.image(result_path, width=380, caption="Tahlil natijasi")
 
                         if "melanoma" in label.lower():
-                            st.error("**Melanoma ehtimoli yuqori!** Zudlik bilan dermatologga murojaat qiling!")
+                            st.error("Melanoma ehtimoli yuqori! Zudlik bilan dermatologga murojaat qiling!")
                         elif conf > 70:
                             st.warning("Yuqori ehtimollik. Mutaxassis maslahati tavsiya etiladi.")
                         else:
@@ -343,7 +310,7 @@ def history_page():
                 if os.path.isfile(path):
                     os.remove(path)
             st.success("Barcha ma'lumotlar tozalandi!")
-            st.rerun()
+            st.rerun()  # To'g'ri!
 
     history_file = os.path.join(OUTPUT_DIR, "history.txt")
     if not os.path.exists(history_file):
@@ -357,6 +324,7 @@ def history_page():
     for i, line in enumerate(lines):
         path, label, conf, time = line.strip().split("|")
         with cols[i % 3]:
+            # Base64 orqali rasm ko'rsatish
             with open(path, "rb") as img_file:
                 img_base64 = base64.b64encode(img_file.read()).decode()
             st.markdown(f"""
