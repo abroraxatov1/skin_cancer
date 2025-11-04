@@ -78,19 +78,20 @@ st.markdown(f"""
     }}
     /* Info kartalar */
     .info-card {{
-        background: {'rgba(30, 33, 43, 0.9)' if st.session_state.dark_mode else 'rgba(255,255,255,0.35)'};
+        
         padding: 0.7rem;
-        border-radius: 10px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+       
         backdrop-filter: blur(12px);
         transition: all 0.3s;
         text-align: center;
         height: 100%;
-        border: 1px solid {'rgba(255,255,255,0.1)' if st.session_state.dark_mode else 'rgba(255,255,255,0.4)'};
+      
     }}
     .info-card:hover {{
+        background: {'rgba(30, 33, 43, 0.9)' if st.session_state.dark_mode else 'rgba(255,255,255,0.35)'};
         transform: translateY(-8px);
         box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        border: 1px solid {'rgba(255,255,255,0.1)' if st.session_state.dark_mode else 'rgba(255,255,255,0.4)'};
     }}
     .info-card img {{
         width: 100%;
@@ -360,4 +361,5 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
 
