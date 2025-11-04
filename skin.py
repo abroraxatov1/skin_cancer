@@ -330,4 +330,3 @@ elif st.session_state.page == 'history':
 elif st.session_state.page == 'contact':
     contact_page()
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
- 
