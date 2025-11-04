@@ -47,7 +47,7 @@ st.markdown(f"""
     .header {{
         text-align: center;
         color: {'#ffffff' if st.session_state.dark_mode else 'white'};
-        font-size: 2.8rem;
+        font-size: 2.5rem;
         font-weight: 800;
         margin: 1rem 0 1.5rem;
         text-shadow: {'none' if st.session_state.dark_mode else '0 2px 4px rgba(0,0,0,0.3)'};
@@ -360,3 +360,4 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
