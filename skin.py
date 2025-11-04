@@ -1,364 +1,606 @@
 #!/usr/bin/env python3
-# =======================================================
-# Skin Cancer AI Detector – To'liq to'g'rilangan & Professional
-# =======================================================
-import streamlit as st
-from inference_sdk import InferenceHTTPClient
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime
+# app.py — Skin Cancer AI Detector (refactored, responsive, modern UI)
+# Run: streamlit run app.py
+# NOTE: Set your Roboflow API key in environment: ROBOFLOW_API_KEY
+
 import os
+import io
+import json
 import base64
+from datetime import datetime
+from pathlib import Path
 
-# === KONFIGURATSIYA ===
-API_URL = "https://detect.roboflow.com"
-API_KEY = "Kz1uRQNYQfiMGbhGigCh"
-MODEL_ID = "classification-igqvf/1"
-OUTPUT_DIR = "results"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-CLIENT = InferenceHTTPClient(api_url=API_URL, api_key=API_KEY)
+import streamlit as st
+from PIL import Image, ImageDraw, ImageFont
 
-# === Sahifa sozlamalari ===
+# Optional: If you have an official client, use it.
+# from inference_sdk import InferenceHTTPClient
+import requests
+
+# -------------------------
+# Configuration
+# -------------------------
+APP_TITLE = "Skin Cancer AI Detector"
+OUTPUT_DIR = Path("results")
+HISTORY_FILE = OUTPUT_DIR / "history.json"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Roboflow / inference configuration:
+ROBOFLOW_API_URL = "https://detect.roboflow.com"
+MODEL_ID = "classification-igqvf/1"  # keep as-is or move to env
+API_KEY = os.getenv("ROBOFLOW_API_KEY", None)  # IMPORTANT: put your key in env var
+
+# If no API key, app will run in "demo" mode with simple heuristics
+DEMO_MODE = API_KEY is None
+
+# -------------------------
+# Streamlit page config
+# -------------------------
 st.set_page_config(
-    page_title="Skin Cancer AI",
-    page_icon="brain",
-    layout="centered",
-    initial_sidebar_state="collapsed"
+    page_title=APP_TITLE,
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-# === Session state ===
-if 'page' not in st.session_state:
-    st.session_state.page = 'home'
-if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False
+# -------------------------
+# Helpers
+# -------------------------
+def load_history():
+    if HISTORY_FILE.exists():
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
 
-# === Fon rasmini base64 ga aylantirish (ixtiyoriy) ===
-def get_base64_image(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
+def save_history(history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
 
-# === Zamonaviy CSS (to'g'ri ishlaydi) ===
-st.markdown(f"""
-<style>
-    .stApp {{
-        background: {'#0e1117' if st.session_state.dark_mode else 'linear-gradient(135deg, #8EC5FC, #E0C3FC)'};
-        min-height: 100vh;
-        font-family: 'Inter', sans-serif;
-    }}
-    .header {{
-        text-align: center;
-        color: {'#ffffff' if st.session_state.dark_mode else 'white'};
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin: 1rem 0 1.5rem;
-        text-shadow: {'none' if st.session_state.dark_mode else '0 2px 4px rgba(0,0,0,0.3)'};
-    }}
-    /* Navbar tugmalari – bir xil o‘lcham */
-    div[data-testid="column"] > div > div > button {{
-        background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.25)'} !important;
-        color: white !important;
-        border: 2px solid #4b6cb7 !important;
-        padding: 0.8rem 1.2rem !important;
-        border-radius: 14px !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
-        max-width: 240px !important;
-        height: 52px !important;
-        width: 100% !important;
-        backdrop-filter: blur(10px) !important;
-        transition: all 0.3s !important;
-        margin: 0.4rem auto !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
-    div[data-testid="column"] > div > div > button:hover {{
-        background: #4b6cb7 !important;
-        transform: translateY(-3px) !important;
-        box-shadow: 0 8px 20px rgba(75, 108, 183, 0.4) !important;
-    }}
-    /* Info kartalar */
-    .info-card {{
-        background: {'rgba(30, 33, 43, 0.9)' if st.session_state.dark_mode else 'rgba(255,255,255,0.35)'};
-        padding: 1.8rem;
-        border-radius: 18px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        backdrop-filter: blur(12px);
-        transition: all 0.3s;
-        text-align: center;
-        height: 100%;
-        border: 1px solid {'rgba(255,255,255,0.1)' if st.session_state.dark_mode else 'rgba(255,255,255,0.4)'};
-    }}
-    .info-card:hover {{
-        transform: translateY(-8px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-    }}
-    .info-card img {{
-        width: 100%;
-        height: 180px;
-        object-fit: cover;
-        border-radius: 14px;
-        margin-bottom: 1rem;
-        border: 2px solid #4b6cb7;
-    }}
-    .info-card h4 {{
-        margin: 0.8rem 0 0.5rem;
-        color: #4b6cb7;
-        font-weight: 700;
-    }}
-    .info-card p {{
-        font-size: 0.95rem;
-        color: {'#e0e0e0' if st.session_state.dark_mode else '#333'};
-        line-height: 1.5;
-    }}
-    .result-box {{
-        background: {'#1e212b' if st.session_state.dark_mode else 'rgba(255,255,255,0.9)'};
-        padding: 2rem;
-        border-radius: 18px;
-        text-align: center;
-        margin: 1.5rem 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        border: 1px solid #4b6cb7;
-    }}
-    .result-img {{
-        border-radius: 16px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        margin: 1rem auto;
-        max-width: 380px;
-        border: 3px solid #4b6cb7;
-    }}
-    .history-item {{
-        background: {'#1a1d26' if st.session_state.dark_mode else 'rgba(255,255,255,0.25)'};
-        border-radius: 16px;
-        padding: 1.2rem;
-        margin: 1rem 0;
-        text-align: center;
-        color: white;
-        border: 1px solid rgba(75,108,183,0.3);
-    }}
-    .history-item img {{
-        border-radius: 12px;
-        margin-bottom: 0.6rem;
-        border: 2px solid #4b6cb7;
-        max-width: 100%;
-    }}
-    .stButton > button {{
-        background: #4b6cb7 !important;
-        color: white !important;
-        border-radius: 14px !important;
-        font-weight: 600 !important;
-        padding: 0.8rem 2rem !important;
-        width: 100% !important;
-        border: 2px solid #4b6cb7 !important;
-    }}
-    .stButton > button:hover {{
-        background: #182848 !important;
-        border-color: #182848 !important;
-    }}
-    .footer {{
-        text-align: center;
-        color: {'#aaa' if st.session_state.dark_mode else 'white'};
-        margin-top: 4rem;
-        font-size: 0.9rem;
-        opacity: 0.8;
-    }}
-    .dark-toggle {{
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 1000;
-        background: rgba(0,0,0,0.3);
-        border-radius: 50px;
-        padding: 0.5rem;
-    }}
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-""", unsafe_allow_html=True)
+def append_history(item):
+    history = load_history()
+    history.append(item)
+    save_history(history)
 
-# === Dark Mode Toggle ===
-with st.container():
-    col1, col2 = st.columns([6, 1])
-    with col2:
-        if st.button("Dark" if not st.session_state.dark_mode else "Light", key="theme"):
-            st.session_state.dark_mode = not st.session_state.dark_mode
-            st.rerun()  # st.experimental_rerun() o'rniga
+def clear_history_files():
+    # Remove saved result images and history
+    history = load_history()
+    for item in history:
+        p = Path(item.get("result_path", ""))
+        if p.exists():
+            try:
+                p.unlink()
+            except Exception:
+                pass
+    if HISTORY_FILE.exists():
+        HISTORY_FILE.unlink()
 
-# === Navbar ===
-def show_nav():
-    st.markdown("<div class='header'>Skin Cancer AI Detector</div>", unsafe_allow_html=True)
-    cols = st.columns(5)
-    nav_items = ["Bosh sahifa", "AI Tekshiruv", "Tarix", "Aloqa", "Chiqish"]
-    pages = ['home', 'ai', 'history', 'contact', 'home']
-    for col, text, page in zip(cols, nav_items, pages):
-        with col:
-            if st.button(text, key=f"nav_{text}"):
-                st.session_state.page = page
-    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,#4b6cb7,transparent);margin:1.5rem 0;'>", unsafe_allow_html=True)
+def pil_to_base64(img: Image.Image, fmt="JPEG"):
+    buf = io.BytesIO()
+    img.save(buf, format=fmt, quality=85)
+    b = base64.b64encode(buf.getvalue()).decode()
+    return b
 
-# === Bosh sahifa ===
-def home_page():
-    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.5rem;'>Teri saratoni turlari</h2>", unsafe_allow_html=True)
-    
-    cards = [
-        ("Melanoma", "Eng xavfli turi. Rangi o‘zgaruvchi, assimetrik dog‘lar bilan namoyon bo‘ladi.",
-         "https://img.lb.wbmdstatic.com/vim/live/webmd/consumer_assets/site_images/article_thumbnails/reference_guide/malignant_melanoma_ref_guide/1800x1200_malignant_melanoma_ref_guide.jpg"),
-        ("BCC", "Eng ko‘p uchraydigan turi. Odatda yuzda oqish yoki qon ketadigan dog‘ sifatida paydo bo‘ladi.",
-         "https://mismosavama.net/wp-content/uploads/2022/05/bazalni-1.webp"),
-        ("SCC", "Qattiq qizil shishlar yoki yara ko‘rinishida. Quyosh nuri bilan kuchayadi.",
-         "https://citydermatologyclinic.com/wp-content/uploads/2025/09/Squamous-Cell-Carcinoma-1024x1024.jpg"),
-        ("Nevus", "Xavfsiz (benign) dog‘. Dumaloq, chekkalari aniq. Kuzatish kerak.",
-         "https://ballaratskincancer.com.au/wp-content/uploads/2020/04/Ballarat-Skin-Cancer-Centre-naevus-1.jpg")
-    ]
+def annotate_image(img_path, label, conf, accent="#ff0066"):
+    try:
+        img = Image.open(img_path).convert("RGB")
+    except Exception:
+        return None
+    draw = ImageDraw.Draw(img)
+    # choose a font if available
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 36)
+    except Exception:
+        font = ImageFont.load_default()
+    text = f"{label} — {conf:.1f}%"
+    padding = 14
+    w, h = draw.textsize(text, font=font)
+    rect_x0, rect_y0 = padding, padding
+    rect_x1, rect_y1 = rect_x0 + w + padding * 2, rect_y0 + h + padding
+    draw.rectangle([rect_x0, rect_y0, rect_x1, rect_y1], fill=(30, 30, 30, 200))
+    draw.text((rect_x0 + padding, rect_y0 + (padding // 2)), text, fill=accent, font=font)
+    return img
 
-    cols = st.columns(4)
-    for i, (title, desc, url) in enumerate(cards):
-        with cols[i]:
-            st.markdown(f"""
-            <div class='info-card'>
-                <img src='{url}' alt='{title}'>
-                <h4>{title}</h4>
-                <p>{desc}</p>
+def infer_with_roboflow(image_path):
+    """Simple POST request to Roboflow inference endpoint.
+       If API_KEY missing or request fails, raises Exception."""
+    if API_KEY is None:
+        raise RuntimeError("No API key provided (demo mode).")
+    url = f"{ROBOFLOW_API_URL}/{MODEL_ID}"
+    headers = {"Authorization": API_KEY}
+    with open(image_path, "rb") as f:
+        files = {"file": f}
+        resp = requests.post(url, headers=headers, files=files, timeout=30)
+    if resp.status_code != 200:
+        raise RuntimeError(f"Inference failed: {resp.status_code} {resp.text}")
+    return resp.json()
+
+def demo_predict(image_path):
+    """A simple fallback 'demo' predictor (not medical). Uses average brightness."""
+    img = Image.open(image_path).convert("L").resize((64, 64))
+    avg = sum(img.getdata()) / (64 * 64)
+    # heuristic: darker lesions might be more suspicious (this is NOT medical advice)
+    if avg < 100:
+        return {"label": "Melanoma-like", "confidence": float(55 + (120 - avg) * 0.2)}
+    elif avg < 140:
+        return {"label": "Suspicious", "confidence": float(40 + (140 - avg) * 0.3)}
+    else:
+        return {"label": "Benign-like", "confidence": float(min(95, avg * 0.4))}
+
+# -------------------------
+# Styling (responsive + modern)
+# -------------------------
+# Important: keep CSS scoped and minimal to avoid breaking Streamlit internals.
+st.markdown(
+    """
+    <style>
+    :root{
+      --primary: #4b6cb7;
+      --secondary: #182848;
+      --accent: #ff0066;
+      --card-bg: rgba(255,255,255,0.85);
+      --glass: rgba(255,255,255,0.08);
+      --radius: 14px;
+      --shadow: 0 8px 30px rgba(15,23,42,0.12);
+    }
+    /* Make top bar sticky */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      backdrop-filter: blur(6px);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.35));
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:700;
+      font-size:18px;
+      color:var(--secondary);
+    }
+    .brand .logo {
+      width:42px;height:42px;border-radius:10px;
+      display:inline-block;background:linear-gradient(135deg,var(--primary),var(--secondary));
+      color:white;align-items:center;justify-content:center;display:flex;font-weight:800;
+    }
+    .nav {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .nav button {
+      border-radius: 10px;
+      padding:8px 14px;
+      background:transparent;
+      border: 1px solid rgba(76, 108, 183, 0.18);
+      color:var(--secondary);
+      font-weight:600;
+    }
+    .nav button.active {
+      background: linear-gradient(90deg,var(--primary),var(--secondary));
+      color:white;
+      border:none;
+      box-shadow:var(--shadow);
+    }
+    .hero {
+      display:flex;
+      gap:30px;
+      align-items:center;
+      justify-content:space-between;
+      padding:40px 20px;
+      margin-bottom: 20px;
+      border-radius: var(--radius);
+    }
+    .hero .content {
+      flex:1;
+      min-width: 220px;
+    }
+    .hero .visual {
+      width:420px;
+      max-width:40%;
+    }
+    /* Cards grid */
+    .cards-grid {
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:16px;
+    }
+    @media (max-width: 1100px) {
+      .cards-grid { grid-template-columns: repeat(3,1fr); }
+      .hero { flex-direction:column; align-items:flex-start; }
+      .hero .visual { max-width:100%; width:100%; }
+    }
+    @media (max-width: 760px) {
+      .cards-grid { grid-template-columns: repeat(2,1fr); }
+      .nav { display:none; }
+    }
+    @media (max-width: 420px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      border-radius:12px;
+      padding:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.8));
+      border: 1px solid rgba(75,108,183,0.12);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .result-panel {
+      padding:18px;
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+      border:1px solid rgba(75,108,183,0.12);
+    }
+    .history-grid {
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:12px;
+    }
+    @media (max-width: 1100px) { .history-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 760px) { .history-grid { grid-template-columns: 1fr; } }
+    .history-item {
+      border-radius:12px;padding:10px;background:linear-gradient(180deg, #fff,#f7f9ff);border:1px solid rgba(75,108,183,0.06);
+    }
+    .footer {
+      padding:22px;text-align:center;color:#666;font-size:13px;margin-top:34px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# -------------------------
+# Topbar / Navbar (custom)
+# -------------------------
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+if "dark" not in st.session_state:
+    st.session_state.dark = False
+
+# build topbar
+topbar_html = f"""
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">AI</div>
+    <div>
+      <div style="font-size:14px;color:#222;font-weight:800;">{APP_TITLE}</div>
+      <div style="font-size:12px;color:#666;margin-top:2px;">Skin lesion image classification (assistive)</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="nav">
+      <button class="{'active' if st.session_state.page=='home' else ''}" onclick="window.dispatchEvent(new CustomEvent('streamlit:nav',{{detail:'home'}}))">Home</button>
+      <button class="{'active' if st.session_state.page=='ai' else ''}" onclick="window.dispatchEvent(new CustomEvent('streamlit:nav',{{detail:'ai'}}))">AI Check</button>
+      <button class="{'active' if st.session_state.page=='history' else ''}" onclick="window.dispatchEvent(new CustomEvent('streamlit:nav',{{detail:'history'}}))">History</button>
+      <button class="{'active' if st.session_state.page=='contact' else ''}" onclick="window.dispatchEvent(new CustomEvent('streamlit:nav',{{detail:'contact'}}))">Contact</button>
+    </div>
+  </div>
+</div>
+"""
+# Note: onClick JS events won't work with Streamlit's sandboxed environment.
+# We still render the topbar and use Streamlit buttons below for navigation.
+st.markdown(topbar_html, unsafe_allow_html=True)
+
+# Provide fallback navigation buttons (these are the actual controls)
+nav_cols = st.columns([1, 1, 1, 1, 4])
+with nav_cols[0]:
+    if st.button("Home", key="nav_home"):
+        st.session_state.page = "home"
+with nav_cols[1]:
+    if st.button("AI Check", key="nav_ai"):
+        st.session_state.page = "ai"
+with nav_cols[2]:
+    if st.button("History", key="nav_history"):
+        st.session_state.page = "history"
+with nav_cols[3]:
+    if st.button("Contact", key="nav_contact"):
+        st.session_state.page = "contact"
+with nav_cols[4]:
+    # Theme toggle placeholder (we keep streamlit default)
+    st.write("")
+
+# -------------------------
+# Page: Home
+# -------------------------
+def page_home():
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="content">
+                <h1 style="margin:0;color:#182848;">Check skin lesions with AI — quick, visual, assistive</h1>
+                <p style="color:#444;margin-top:8px;">
+                    Upload a clinical-quality photo of a skin lesion. This tool compares the image to a trained model and returns a classification with confidence.
+                    <strong>Not a diagnosis.</strong> Always consult a dermatologist for medical decisions.
+                </p>
+                <div style="margin-top:18px;">
+                    <a href="#ai" style="text-decoration:none;">
+                        <button style="padding:10px 16px;border-radius:10px;background:linear-gradient(90deg,#4b6cb7,#182848);color:white;border:none;font-weight:700;">Start AI Check</button>
+                    </a>
+                    <span style="margin-left:12px;color:#666;font-size:13px;">Or scroll to see lesion types</span>
+                </div>
             </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("<h3 style='color:white;text-align:center;margin:2.5rem 0 1.5rem;'>AI qanday ishlaydi?</h3>", unsafe_allow_html=True)
-    st.success("""
-    **1. Rasm yuklang** → Yuqori sifatli teri fotosurati  
-    **2. AI tahlil qiladi** → 1000+ o‘qitilgan namunalar bilan solishtirish  
-    **3. Natija chiqaradi** → Saraton turi + ishonchlilik foizi  
-    """)
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("AI Tekshiruvni Boshlash", type="primary"):
-            st.session_state.page = 'ai'
-
-# === AI Tekshiruv ===
-def ai_page():
-    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.5rem;'>Teri rasmini yuklang</h2>", unsafe_allow_html=True)
-    
-    uploaded_file = st.file_uploader(
-        "JPG, PNG formatidagi rasmni yuklang",
-        type=["jpg", "jpeg", "png"],
-        label_visibility="collapsed"
+            <div class="visual">
+                <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=6c668d26b1f4c3c2d4e7a4f9e7223a68" style="width:100%;border-radius:12px;box-shadow:0 8px 30px rgba(24,40,72,0.08);" />
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    if uploaded_file:
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            st.image(uploaded_file, caption="Yuklangan rasm", use_column_width=True)
-        with col2:
-            if st.button("AI bilan tahlil qilish", type="primary"):
-                with st.spinner("AI tahlil qilmoqda..."):
+    st.markdown("<h3 style='color:#182848;margin-top:18px;'>Common lesion types</h3>", unsafe_allow_html=True)
+    # Cards grid
+    cards = [
+        ("Melanoma", "Potentially serious; asymmetry, border irregularity, color variegation.", "https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=ea6e0372fb1f2b2ad5f9f9b7f4a2f2b9"),
+        ("Basal Cell Carcinoma (BCC)", "Often pearly nodules or non-healing sores, common on sun-exposed areas.", "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=61f1c8b7c6b0713a8d7c6a8c4f8b2bfa"),
+        ("Squamous Cell Carcinoma (SCC)", "Red, scaly patches or ulcers; can arise on chronic sun-damaged skin.", "https://images.unsplash.com/photo-1582719478250-1d5b0945f8f4?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3f8a4e2a49de15f3b9a9a2a4f3b7c8d9"),
+        ("Nevus (Mole)", "Benign-looking round/oval lesions with regular borders — monitoring recommended.", "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=9b3f7f4f6f3b5e6d7c8f9a0b1c2d3e4f"),
+    ]
+
+    # responsive grid using columns
+    cols = st.columns(4)
+    for col, (title, desc, url) in zip(cols, cards):
+        with col:
+            st.markdown(
+                f"""
+                <div class="card">
+                  <img src="{url}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px;" />
+                  <h4 style="margin:6px 0 4px;color:#182848;">{title}</h4>
+                  <p style="margin:0;font-size:14px;color:#444;">{desc}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("---")
+    st.markdown(
+        """
+        <div style="display:flex;gap:12px;align-items:center;">
+            <div style="flex:1">
+                <h3 style="margin:0;color:#182848;">Why use this tool?</h3>
+                <p style="color:#444;">It performs quick image classification using a trained model and gives a confidence estimate. It is for triage and educational purposes only.</p>
+            </div>
+            <div style="width:220px;">
+                <button style="padding:10px 12px;border-radius:10px;background:linear-gradient(90deg,#4b6cb7,#182848);color:white;border:none;font-weight:700;width:100%;">Learn more</button>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# -------------------------
+# Page: AI Check
+# -------------------------
+def page_ai():
+    st.markdown("<h2 style='color:#182848;'>AI Check — Upload image</h2>", unsafe_allow_html=True)
+
+    left, right = st.columns([2, 1])
+
+    with left:
+        uploaded = st.file_uploader(
+            "Upload a clear photo of the lesion (JPG/PNG). For best results: good lighting, lesion filling most of frame.",
+            type=["jpg", "jpeg", "png"],
+            accept_multiple_files=False,
+            help="Drag & drop supported."
+        )
+
+        # optional patient note
+        patient_note = st.text_input("Short note (optional): where on the body, age, prior changes etc.")
+
+        # upload example / demo images
+        examples_exp = st.expander("See example images")
+        with examples_exp:
+            demo_cols = st.columns(4)
+            demo_imgs = [
+                "https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=ea6e0372fb1f2b2ad5f9f9b7f4a2f2b9",
+                "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=61f1c8b7c6b0713a8d7c6a8c4f8b2bfa",
+                "https://images.unsplash.com/photo-1582719478250-1d5b0945f8f4?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=3f8a4e2a49de15f3b9a9a2a4f3b7c8d9",
+                "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=9b3f7f4f6f3b5e6d7c8f9a0b1c2d3e4f",
+            ]
+            for c, url in zip(demo_cols, demo_imgs):
+                with c:
+                    st.image(url, use_column_width=True, caption="Example", output_format="auto")
+
+    with right:
+        st.markdown("<div class='result-panel'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin:0;color:#182848;'>Result</h4>", unsafe_allow_html=True)
+        placeholder = st.empty()
+        if DEMO_MODE:
+            st.info("Running in demo mode (no API key). To enable real inference set ROBOFLOW_API_KEY env variable.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # perform inference
+    if uploaded:
+        # save original
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_name = f"{Path(uploaded.name).stem}_{ts}{Path(uploaded.name).suffix}"
+        saved_path = OUTPUT_DIR / safe_name
+        with open(saved_path, "wb") as f:
+            f.write(uploaded.getbuffer())
+
+        # Show preview
+        st.image(saved_path, caption="Uploaded image", use_column_width=True)
+
+        # action buttons
+        c1, c2, c3 = st.columns([1, 1, 1])
+        with c1:
+            if st.button("Run AI Check", key=f"run_{ts}"):
+                # perform inference with spinner
+                with st.spinner("Running model..."):
                     try:
-                        img_path = os.path.join(OUTPUT_DIR, uploaded_file.name)
-                        with open(img_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-
-                        result = CLIENT.infer(img_path, model_id=MODEL_ID)
-                        preds = result.get("predictions", {})
-
-                        if not preds:
-                            label, conf = "Aniqlanmadi", 0
+                        if not DEMO_MODE:
+                            resp = infer_with_roboflow(str(saved_path))
+                            # Roboflow classification format may vary — try to read safely
+                            preds = resp.get("predictions") if isinstance(resp, dict) else None
+                            if preds:
+                                # pick highest confidence
+                                best = max(preds, key=lambda p: p.get("confidence", 0))
+                                label = best.get("class", best.get("label", "Unknown"))
+                                conf = float(best.get("confidence", 0) * 100)
+                            else:
+                                # If Roboflow returns different structure, try to parse
+                                # fallback:
+                                label = resp.get("label", "Unknown")
+                                conf = float(resp.get("confidence", 0) * 100)
                         else:
-                            label, info = max(preds.items(), key=lambda x: x[1]["confidence"])
-                            conf = info["confidence"] * 100
+                            pred = demo_predict(str(saved_path))
+                            label = pred["label"]
+                            conf = pred["confidence"]
 
-                        img = Image.open(img_path)
-                        draw = ImageDraw.Draw(img)
-                        try:
-                            font = ImageFont.truetype("arial.ttf", 40)
-                        except:
-                            font = ImageFont.load_default()
-                        draw.text((20, 20), f"{label} ({conf:.1f}%)", fill="#ff0066", font=font, stroke_width=3, stroke_fill="black")
+                        # annotate image
+                        annotated = annotate_image(str(saved_path), label, conf)
+                        result_name = f"result_{ts}.jpg"
+                        result_path = OUTPUT_DIR / result_name
+                        if annotated:
+                            annotated.save(result_path)
+                        else:
+                            # fallback copy
+                            Image.open(saved_path).save(result_path)
 
-                        result_name = f"result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-                        result_path = os.path.join(OUTPUT_DIR, result_name)
-                        img.save(result_path)
+                        # save history entry
+                        entry = {
+                            "timestamp": datetime.now().isoformat(timespec="minutes"),
+                            "source_name": uploaded.name,
+                            "note": patient_note,
+                            "label": label,
+                            "confidence": round(conf, 1),
+                            "result_path": str(result_path),
+                        }
+                        append_history(entry)
 
-                        with open(os.path.join(OUTPUT_DIR, "history.txt"), "a", encoding="utf-8") as f:
-                            f.write(f"{result_path}|{label}|{conf:.1f}|{datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+                        # show result
+                        st.success(f"{label} — {conf:.1f}%")
+                        st.image(result_path, caption="Annotated result", use_column_width=False, width=420)
 
-                        st.markdown(f"""
-                        <div class='result-box'>
-                            <h3 style='color:#4b6cb7;margin:0;'>Natija</h3>
-                            <h2 style='color:#ff0066;margin:0.5rem 0;'>{label}</h2>
-                            <p style='font-size:1.2rem;'><b>{conf:.1f}%</b> ishonch bilan</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-
-                        st.image(result_path, width=380, caption="Tahlil natijasi")
-
-                        if "melanoma" in label.lower():
-                            st.error("Melanoma ehtimoli yuqori! Zudlik bilan dermatologga murojaat qiling!")
+                        # alerts
+                        if "melanoma" in label.lower() or "melanoma" in str(label).lower() or conf > 85:
+                            st.error("High suspicion — please consult a dermatologist urgently.")
                         elif conf > 70:
-                            st.warning("Yuqori ehtimollik. Mutaxassis maslahati tavsiya etiladi.")
+                            st.warning("Moderate-to-high confidence. Seek specialist opinion.")
                         else:
-                            st.info("Past ehtimollik. Doimiy kuzatish tavsiya etiladi.")
-
+                            st.info("Low confidence — consider monitoring and consulting a professional if concerned.")
                     except Exception as e:
-                        st.error(f"Xatolik: {str(e)}")
+                        st.exception(f"Inference error: {e}")
 
-# === Tarix ===
-def history_page():
-    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.5rem;'>Tekshiruvlar tarixi</h2>", unsafe_allow_html=True)
+        with c2:
+            if st.button("Save to History", key=f"save_{ts}"):
+                # If user wants to save without running inference (e.g., sample)
+                annotated = annotate_image(str(saved_path), "Saved (no AI)", 0.0)
+                result_name = f"result_saved_{ts}.jpg"
+                result_path = OUTPUT_DIR / result_name
+                (annotated or Image.open(saved_path)).save(result_path)
+                entry = {
+                    "timestamp": datetime.now().isoformat(timespec="minutes"),
+                    "source_name": uploaded.name,
+                    "note": patient_note,
+                    "label": "Saved (no AI)",
+                    "confidence": 0.0,
+                    "result_path": str(result_path),
+                }
+                append_history(entry)
+                st.success("Saved to history.")
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("Tarixni tozalash", type="secondary"):
-            for f in os.listdir(OUTPUT_DIR):
-                path = os.path.join(OUTPUT_DIR, f)
-                if os.path.isfile(path):
-                    os.remove(path)
-            st.success("Barcha ma'lumotlar tozalandi!")
-            st.rerun()  # To'g'ri!
+        with c3:
+            if st.button("Discard", key=f"discard_{ts}"):
+                try:
+                    saved_path.unlink()
+                except Exception:
+                    pass
+                st.info("Upload discarded.")
+    else:
+        st.info("Please upload an image to start an AI check.")
 
-    history_file = os.path.join(OUTPUT_DIR, "history.txt")
-    if not os.path.exists(history_file):
-        st.info("Hozircha hech qanday tekshiruv yo‘q.")
+
+# -------------------------
+# Page: History
+# -------------------------
+def page_history():
+    st.markdown("<h2 style='color:#182848;'>History</h2>", unsafe_allow_html=True)
+    history = load_history()[::-1]  # show latest first
+    if not history:
+        st.info("No history yet. Run an AI check to populate history.")
         return
 
-    with open(history_file, "r", encoding="utf-8") as f:
-        lines = f.readlines()[::-1]
+    # Controls
+    col_a, col_b = st.columns([1, 4])
+    with col_a:
+        if st.button("Clear all history"):
+            clear_history_files()
+            st.success("All history cleared. Reload the page.")
+            st.experimental_rerun()
 
-    cols = st.columns(3)
-    for i, line in enumerate(lines):
-        path, label, conf, time = line.strip().split("|")
-        with cols[i % 3]:
-            # Base64 orqali rasm ko'rsatish
-            with open(path, "rb") as img_file:
-                img_base64 = base64.b64encode(img_file.read()).decode()
-            st.markdown(f"""
-            <div class='history-item'>
-                <img src='data:image/jpeg;base64,{img_base64}' alt='natija'>
-                <h4 style='margin:0.5rem 0;color:#4b6cb7;'>{label}</h4>
-                <p style='margin:0;font-weight:600;'>{conf}%</p>
-                <small>{time}</small>
+    # display grid
+    grid_cols = st.columns(3)
+    for i, item in enumerate(history):
+        col = grid_cols[i % 3]
+        with col:
+            path = Path(item.get("result_path", ""))
+            caption = f"{item.get('label')} — {item.get('confidence')}%"
+            time = item.get("timestamp", "")
+            note = item.get("note", "")
+            if path.exists():
+                img_b64 = pil_to_base64(Image.open(path))
+                st.markdown(
+                    f"""
+                    <div class="history-item">
+                      <img src="data:image/jpeg;base64,{img_b64}" style="width:100%;border-radius:8px;" />
+                      <h4 style="margin:8px 0 4px;color:#182848;">{caption}</h4>
+                      <p style="margin:0;font-size:13px;color:#444;">{note}</p>
+                      <small style="color:#666;">{time}</small>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.warning(f"Missing file: {path}")
+
+# -------------------------
+# Page: Contact
+# -------------------------
+def page_contact():
+    st.markdown("<h2 style='color:#182848;'>Contact / About</h2>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="flex:1">
+            <p style="color:#444;">
+              This tool is built for educational and triage purposes. It is NOT a diagnostic tool. Always consult
+              a qualified dermatologist for medical advice.
+            </p>
+            <p style="margin-top:12px;color:#444;"><b>Developer:</b> Bobokhonov A. — Samarkand State University</p>
+            <p style="margin-top:6px;color:#444;"><b>Email:</b> <a href="mailto:bobokhonov_a@samdu.uz">bobokhonov_a@samdu.uz</a></p>
+          </div>
+          <div style="width:300px;">
+            <div style="padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#f7fbff);border:1px solid rgba(75,108,183,0.06);">
+              <strong style="color:#182848;">Security note</strong>
+              <p style="color:#444;font-size:13px;margin-top:8px;">Do not hard-code API keys into source. Use environment variables on the server.</p>
             </div>
-            """, unsafe_allow_html=True)
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-# === Aloqa ===
-def contact_page():
-    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.5rem;'>Bog‘lanish</h2>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style='text-align:center;background:rgba(255,255,255,0.15);padding:2rem;border-radius:18px;backdrop-filter:blur(10px);border:1px solid rgba(75,108,183,0.3);'>
-        <p style='margin:0.8rem 0;font-size:1.1rem;'><b>Email:</b> <a href='mailto:bobokhonov_a@samdu.uz' style='color:#4b6cb7;text-decoration:none;'>bobokhonov_a@samdu.uz</a></p>
-        <p style='margin:0.8rem 0;font-size:1.1rem;'><b>Manzil:</b> Samarqand, O‘zbekiston</p>
-        <p style='margin:1.5rem 0 0;font-size:0.95rem;color:#ccc;'>© 2025 Skin Cancer AI Detector</p>
-    </div>
-    """, unsafe_allow_html=True)
+# -------------------------
+# Router
+# -------------------------
+if st.session_state.page == "home":
+    page_home()
+elif st.session_state.page == "ai":
+    page_ai()
+elif st.session_state.page == "history":
+    page_history()
+elif st.session_state.page == "contact":
+    page_contact()
+else:
+    page_home()
 
-# === Asosiy oqim ===
-show_nav()
-
-if st.session_state.page == 'home':
-    home_page()
-elif st.session_state.page == 'ai':
-    ai_page()
-elif st.session_state.page == 'history':
-    history_page()
-elif st.session_state.page == 'contact':
-    contact_page()
-
-st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
-
-
+st.markdown('<div class="footer">© 2025 Skin Cancer AI Detector — For educational use only.</div>', unsafe_allow_html=True)
