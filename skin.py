@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =======================================================
-# Skin Cancer AI Detector – Navbar tugmasiz, rasmlar keng
+# Skin Cancer AI Detector – Navbar shaffof, rasmlar tartibli
 # =======================================================
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
@@ -31,84 +31,101 @@ if 'page' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False
 
-# === Zamonaviy CSS (tugmasiz navbar, keng rasm) ===
+# === Zamonaviy CSS – yangilangan ===
 st.markdown(f"""
 <style>
     .stApp {{
         background: {'#0e1117' if st.session_state.dark_mode else 'linear-gradient(135deg, #8EC5FC, #E0C3FC)'};
         min-height: 100vh;
         font-family: 'Inter', sans-serif;
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem;
     }}
     .header {{
         text-align: center;
         color: {'#ffffff' if st.session_state.dark_mode else 'white'};
-        font-size: 2.8rem;
+        font-size: 2.6rem;
         font-weight: 800;
-        margin: 1rem 0 1.5rem;
+        margin: 0.5rem 0 1.2rem;
         text-shadow: {'none' if st.session_state.dark_mode else '0 2px 4px rgba(0,0,0,0.3)'};
     }}
-    /* Navbar – faqat matn, kattalashtirilgan */
-    .nav-text {{
-        font-size: 1.25rem !important;
-        font-weight: 700 !important;
-        color: white !important;
-        text-decoration: none !important;
-        padding: 0.8rem 1.2rem !important;
-        border-radius: 14px !important;
-        transition: all 0.3s !important;
-        background: {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.25)'} !important;
-        backdrop-filter: blur(10px) !important;
-        border: 2px solid #4b6cb7 !important;
-        text-align: center;
-        min-width: 160px;
-    }}
-    .nav-text:hover {{
-        background: #4b6cb7 !important;
-        transform: translateY(-3px) !important;
-        box-shadow: 0 8px 20px rgba(75, 108, 183, 0.4) !important;
-    }}
+
+    /* === NAVBAR – shaffof, o‘rtada, bir xil masofa === */
     .nav-container {{
         display: flex;
         justify-content: center;
-        gap: 1rem;
+        gap: 1.8rem;
         flex-wrap: wrap;
-        margin-bottom: 2rem;
+        margin: 1.5rem 0;
+        padding: 0 1rem;
     }}
-    /* Info kartalar – backgroundsiz rasm */
+    .nav-item {{
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: white !important;
+        border: 2px solid #4b6cb7 !important;
+        padding: 0.85rem 1.4rem !important;
+        border-radius: 16px !important;
+        font-weight: 700 !important;
+        font-size: 1.15rem !important;
+        min-width: 150px;
+        height: 56px;
+        backdrop-filter: blur(12px);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }}
+    .nav-item:hover {{
+        background: #4b6cb7 !important;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 22px rgba(75, 108, 183, 0.35) !important;
+    }}
+    .nav-item.active {{
+        background: #4b6cb7 !important;
+        box-shadow: 0 8px 20px rgba(75, 108, 183, 0.4) !important;
+        transform: translateY(-2px);
+    }}
+
+    /* === KARTALAR – shaffof fon, bir xil o‘lcham === */
     .info-card {{
-        background: transparent;
-        padding: 1.2rem 0.5rem;
+        background: {'rgba(30, 33, 43, 0.75)' if st.session_state.dark_mode else 'rgba(255, 255, 255, 0.28)'};
+        padding: 1.6rem;
+        border-radius: 20px;
         text-align: center;
-        transition: all 0.3s;
+        height: 100%;
+        border: 1px solid {'rgba(255,255,255,0.15)' if st.session_state.dark_mode else 'rgba(255,255,255,0.5)'};
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     }}
     .info-card:hover {{
-        transform: translateY(-5px);
+        transform: translateY(-6px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.18);
     }}
     .info-card img {{
         width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
+        height: 220px !important;
+        object-fit: cover !important;
         border-radius: 16px !important;
         border: 3px solid #4b6cb7 !important;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
         margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }}
     .info-card h4 {{
-        margin: 0.8rem 0 0.4rem;
+        margin: 0.7rem 0 0.4rem;
         color: #4b6cb7;
         font-weight: 700;
-        font-size: 1.3rem;
+        font-size: 1.35rem;
     }}
     .info-card p {{
-        font-size: 1rem;
+        font-size: 0.98rem;
         color: {'#e0e0e0' if st.session_state.dark_mode else '#222'};
-        line-height: 1.6;
-        max-width: 90%;
-        margin: 0 auto;
+        line-height: 1.55;
+        margin: 0;
     }}
+
     .result-box {{
-        background: {'#1e212b' if st.session_state.dark_mode else 'rgba(255,255,255,0.95)'};
+        background: {'#1e212b' if st.session_state.dark_mode else 'rgba(255,255,255,0.92)'};
         padding: 2rem;
         border-radius: 18px;
         text-align: center;
@@ -138,7 +155,8 @@ st.markdown(f"""
         margin-bottom: 0.6rem;
         border: 2px solid #4b6cb7;
         max-width: 100%;
-        width: 100%;
+        height: 180px;
+        object-fit: cover;
     }}
     .stButton > button {{
         background: #4b6cb7 !important;
@@ -182,7 +200,7 @@ with st.container():
             st.session_state.dark_mode = not st.session_state.dark_mode
             st.rerun()
 
-# === Navbar – faqat kattalashtirilgan matnlar (tugmasiz) ===
+# === NAVBAR – shaffof, o‘rtada, bir xil masofa ===
 def show_nav():
     st.markdown("<div class='header'>Skin Cancer AI Detector</div>", unsafe_allow_html=True)
     
@@ -196,20 +214,22 @@ def show_nav():
     
     nav_html = "<div class='nav-container'>"
     for text, page in nav_items:
-        active = "background: #4b6cb7; box-shadow: 0 8px 20px rgba(75,108,183,0.4);" if st.session_state.page == page else ""
+        is_active = st.session_state.page == page
+        active_class = "active" if is_active else ""
         nav_html += f"""
-        <div class='nav-text' style='{active}' onclick="window.location.href='?page={page}'">
+        <div class='nav-item {active_class}' onclick="document.getElementById('nav_{page}').click()">
             {text}
         </div>
+        <button id="nav_{page}" style="display:none" onclick="st.session_state.page='{page}'; st.rerun()"></button>
         """
     nav_html += "</div>"
-    st.markdown(nav_html, unsafe_allow_html=True)
     
-    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,#4b6cb7,transparent);margin:1.5rem 0;'>", unsafe_allow_html=True)
+    st.markdown(nav_html, unsafe_allow_html=True)
+    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,#4b6cb7,transparent);margin:2rem 0;'>", unsafe_allow_html=True)
 
 # === Bosh sahifa ===
 def home_page():
-    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.5rem;'>Teri saratoni turlari</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:white;margin-bottom:1.8rem;'>Teri saratoni turlari</h2>", unsafe_allow_html=True)
     
     cards = [
         ("Melanoma", "Eng xavfli turi. Rangi o‘zgaruvchi, assimetrik dog‘lar bilan namoyon bo‘ladi.",
