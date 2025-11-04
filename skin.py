@@ -35,7 +35,7 @@ if 'dark_mode' not in st.session_state:
 def load_css():
     st.markdown(f"""
     <style>
-        .main-container {{
+        .stApp {{
             background: {'#0e1117' if st.session_state.dark_mode else 'linear-gradient(135deg, #8EC5FC, #E0C3FC)'};
             min-height: 100vh;
             padding: 2rem;
@@ -354,3 +354,4 @@ elif st.session_state.page == 'contact':
 
 st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
