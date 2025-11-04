@@ -79,8 +79,8 @@ st.markdown(f"""
     /* Info kartalar */
     .info-card {{
         background: {'rgba(30, 33, 43, 0.9)' if st.session_state.dark_mode else 'rgba(255,255,255,0.35)'};
-        padding: 1.8rem;
-        border-radius: 18px;
+        padding: 0.7rem;
+        border-radius: 10px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         backdrop-filter: blur(12px);
         transition: all 0.3s;
@@ -94,9 +94,9 @@ st.markdown(f"""
     }}
     .info-card img {{
         width: 100%;
-        height: 180px;
+        height: 100px;
         object-fit: cover;
-        border-radius: 14px;
+        border-radius: 10px;
         margin-bottom: 1rem;
         border: 2px solid #4b6cb7;
     }}
@@ -360,3 +360,4 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
