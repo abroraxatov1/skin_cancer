@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =======================================================
-# Skin Cancer AI Detector – Bootstrap 5 Navbar
+# Skin Cancer AI Detector – Bootstrap 5 Navbar (XATOSIZ)
 # =======================================================
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
@@ -31,53 +31,63 @@ if 'page' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False
 
-# === Bootstrap 5 CDN + Custom CSS ===
+# === Bootstrap 5 + Custom CSS ===
 st.markdown("""
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+    :root {
+        --primary: #4b6cb7;
+        --primary-dark: #182848;
+        --bg-gradient: linear-gradient(135deg, #8EC5FC, #E0C3FC);
+        --bg-dark: #0e1117;
+    }
     .stApp {
-        background: linear-gradient(135deg, #8EC5FC, #E0C3FC);
+        background: var(--bg-gradient);
         min-height: 100vh;
         font-family: 'Inter', sans-serif;
+        padding: 1rem 0;
     }
     .navbar {
-        background: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(75, 108, 183, 0.3);
-        padding: 0.8rem 1rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background: rgba(255, 255, 255, 0.18) !important;
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(75, 108, 183, 0.25);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+        margin-bottom: 2rem;
     }
     .navbar-brand {
         font-weight: 800;
-        font-size: 1.8rem;
+        font-size: 1.85rem;
         color: white !important;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        text-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     .nav-link {
         color: white !important;
         font-weight: 600;
-        font-size: 1.1rem;
-        padding: 0.6rem 1.2rem !important;
-        border-radius: 12px;
+        font-size: 1.12rem;
+        padding: 0.65rem 1.35rem !important;
+        border-radius: 14px;
         transition: all 0.3s ease;
-        margin: 0 0.3rem;
+        margin: 0 0.25rem;
     }
     .nav-link:hover {
-        background: #4b6cb7 !important;
+        background: var(--primary) !important;
         color: white !important;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(75, 108, 183, 0.35);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(75, 108, 183, 0.38);
     }
     .nav-link.active {
-        background: #4b6cb7 !important;
+        background: var(--primary) !important;
         color: white !important;
         font-weight: 700;
-        box-shadow: 0 6px 15px rgba(75, 108, 183, 0.4);
+        box-shadow: 0 8px 20px rgba(75, 108, 183, 0.45);
+        transform: translateY(-1px);
     }
     .info-card {
-        background: rgba(255, 255, 255, 0.3);
-        padding: 1.5rem;
-        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.32);
+        padding: 1.6rem;
+        border-radius: 20px;
         text-align: center;
         height: 100%;
         border: 1px solid rgba(255,255,255,0.5);
@@ -88,56 +98,57 @@ st.markdown("""
     .info-card:hover {
         transform: translateY(-8px);
         background: rgba(255, 255, 255, 0.45);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+        box-shadow: 0 14px 32px rgba(0,0,0,0.2);
     }
     .info-card img {
         width: 100%;
-        height: 180px;
+        height: 200px;
         object-fit: cover;
-        border-radius: 14px;
-        border: 3px solid #4b6cb7;
+        border-radius: 16px;
+        border: 3px solid var(--primary);
         margin-bottom: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
     }
     .info-card h4 {
-        color: #4b6cb7;
+        color: var(--primary);
         font-weight: 700;
         margin: 0.8rem 0 0.5rem;
+        font-size: 1.3rem;
     }
     .info-card p {
-        color: #333;
-        font-size: 0.95rem;
-        line-height: 1.5;
+        color: #222;
+        font-size: 0.98rem;
+        line-height: 1.55;
     }
     .result-box {
-        background: rgba(255,255,255,0.92);
-        padding: 2rem;
-        border-radius: 18px;
+        background: rgba(255,255,255,0.94);
+        padding: 2.2rem;
+        border-radius: 20px;
         text-align: center;
-        margin: 1.5rem 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        border: 1px solid #4b6cb7;
+        margin: 1.8rem 0;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.16);
+        border: 1px solid var(--primary);
     }
     .result-img {
         border-radius: 16px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.22);
         max-width: 100%;
-        width: 420px;
-        border: 3px solid #4b6cb7;
+        width: 440px;
+        border: 3px solid var(--primary);
     }
     .history-item {
-        background: rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.28);
         border-radius: 16px;
-        padding: 1.2rem;
+        padding: 1.3rem;
         margin: 1rem 0;
         text-align: center;
-        color: #333;
+        color: #222;
         border: 1px solid rgba(75,108,183,0.3);
     }
     .history-item img {
         border-radius: 12px;
         margin-bottom: 0.6rem;
-        border: 2px solid #4b6cb7;
+        border: 2px solid var(--primary);
         max-width: 100%;
         height: 180px;
         object-fit: cover;
@@ -145,23 +156,29 @@ st.markdown("""
     .footer {
         text-align: center;
         color: white;
-        margin-top: 4rem;
+        margin-top: 5rem;
         font-size: 0.95rem;
         opacity: 0.9;
+        padding: 1.5rem 0;
+    }
+    .dark-mode-toggle {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 1000;
     }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
 
-# === Dark Mode Toggle (o‘ng yuqori burchak) ===
+# === Dark Mode Toggle ===
 with st.container():
     col1, col2 = st.columns([8, 1])
     with col2:
-        if st.button("Dark" if not st.session_state.dark_mode else "Light", key="theme"):
+        if st.button("Dark" if not st.session_state.dark_mode else "Light", key="theme_toggle", help="Dark/Light rejim"):
             st.session_state.dark_mode = not st.session_state.dark_mode
             st.rerun()
 
-# === Bootstrap Navbar ===
+# === NAVBAR – Bootstrap 5, XATOSIZ ===
 def show_nav():
     nav_items = [
         ("Bosh sahifa", 'home'),
@@ -170,6 +187,11 @@ def show_nav():
         ("Aloqa", 'contact'),
         ("Chiqish", 'home')
     ]
+
+    # Har bir sahifa uchun yagona key
+    for text, page in nav_items:
+        if f"nav_clicked_{page}" not in st.session_state:
+            st.session_state[f"nav_clicked_{page}"] = False
 
     nav_html = '''
     <nav class="navbar navbar-expand-lg">
@@ -185,9 +207,19 @@ def show_nav():
     for text, page in nav_items:
         is_active = st.session_state.page == page
         active_class = "active" if is_active else ""
+        
+        # Har bir sahifa uchun yagona yashirin tugma
+        if st.session_state.get(f"nav_clicked_{page}", False):
+            st.session_state.page = page
+            st.session_state[f"nav_clicked_{page}"] = False
+            st.rerun()
+
         nav_html += f'''
             <li class="nav-item">
-              <a class="nav-link {active_class}" href="#" onclick="document.getElementById('nav_{page}').click()">{text}</a>
+              <a class="nav-link {active_class}" href="#" 
+                 onclick="document.getElementById('hidden_btn_{page}').click()">
+                {text}
+              </a>
             </li>
         '''
 
@@ -200,13 +232,13 @@ def show_nav():
 
     st.markdown(nav_html, unsafe_allow_html=True)
 
-    # Yashirin tugmalar (bosish uchun)
+    # Yashirin tugmalar – faqat bitta marta yaratiladi
     for _, page in nav_items:
-        if st.button("", key=f"nav_{page}", help=""):
-            st.session_state.page = page
+        if st.button("", key=f"hidden_btn_{page}", help="", type="secondary", use_container_width=False):
+            st.session_state[f"nav_clicked_{page}"] = True
             st.rerun()
 
-    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,#4b6cb7,transparent);margin:1.5rem 0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary),transparent);margin:2rem 0;'>", unsafe_allow_html=True)
 
 # === Bosh sahifa ===
 def home_page():
@@ -280,10 +312,10 @@ def ai_page():
                         img = Image.open(img_path)
                         draw = ImageDraw.Draw(img)
                         try:
-                            font = ImageFont.truetype("arial.ttf", 42)
+                            font = ImageFont.truetype("arial.ttf", 44)
                         except:
                             font = ImageFont.load_default()
-                        draw.text((22, 22), f"{label} ({conf:.1f}%)", fill="#ff0066", font=font, stroke_width=3, stroke_fill="black")
+                        draw.text((25, 25), f"{label} ({conf:.1f}%)", fill="#ff0066", font=font, stroke_width=3, stroke_fill="black")
 
                         result_name = f"result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                         result_path = os.path.join(OUTPUT_DIR, result_name)
@@ -294,13 +326,13 @@ def ai_page():
 
                         st.markdown(f"""
                         <div class='result-box'>
-                            <h3 style='color:#4b6cb7;'>Natija</h3>
+                            <h3 style='color:var(--primary);'>Natija</h3>
                             <h2 style='color:#ff0066;'>{label}</h2>
-                            <p style='font-size:1.3rem;'><b>{conf:.1f}%</b> ishonch bilan</p>
+                            <p style='font-size:1.35rem;'><b>{conf:.1f}%</b> ishonch bilan</p>
                         </div>
                         """, unsafe_allow_html=True)
 
-                        st.image(result_path, caption="Tahlil natijasi", width=420)
+                        st.image(result_path, caption="Tahlil natijasi", width=440)
 
                         if "melanoma" in label.lower():
                             st.error("**Melanoma ehtimoli yuqori!** Zudlik bilan dermatologga murojaat qiling!")
@@ -343,7 +375,7 @@ def history_page():
             st.markdown(f"""
             <div class='history-item'>
                 <img src='data:image/jpeg;base64,{img_base64}' alt='natija'>
-                <h4 style='color:#4b6cb7;'>{label}</h4>
+                <h4 style='color:var(--primary);'>{label}</h4>
                 <p style='font-weight:600;'>{conf}%</p>
                 <small>{time}</small>
             </div>
@@ -353,10 +385,10 @@ def history_page():
 def contact_page():
     st.markdown("<h2 class='text-center text-white mb-4'>Bog‘lanish</h2>", unsafe_allow_html=True)
     st.markdown("""
-    <div style='text-align:center;background:rgba(255,255,255,0.15);padding:2.5rem;border-radius:18px;backdrop-filter:blur(10px);border:1px solid rgba(75,108,183,0.3);'>
-        <p style='margin:0.8rem 0;font-size:1.1rem;'><b>Email:</b> <a href='mailto:bobokhonov_a@samdu.uz' style='color:#4b6cb7;text-decoration:none;'>bobokhonov_a@samdu.uz</a></p>
-        <p style='margin:0.8rem 0;font-size:1.1rem;'><b>Manzil:</b> Samarqand, O‘zbekiston</p>
-        <p style='margin:1.5rem 0 0;font-size:0.95rem;color:#ccc;'>© 2025 Skin Cancer AI Detector</p>
+    <div style='text-align:center;background:rgba(255,255,255,0.18);padding:2.5rem;border-radius:20px;backdrop-filter:blur(12px);border:1px solid rgba(75,108,183,0.3);'>
+        <p style='margin:0.8rem 0;font-size:1.12rem;'><b>Email:</b> <a href='mailto:bobokhonov_a@samdu.uz' style='color:var(--primary);text-decoration:none;'>bobokhonov_a@samdu.uz</a></p>
+        <p style='margin:0.8rem 0;font-size:1.12rem;'><b>Manzil:</b> Samarqand, O‘zbekiston</p>
+        <p style='margin:1.5rem 0 0;font-size:0.95rem;color:#ddd;'>© 2025 Skin Cancer AI Detector</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -374,7 +406,5 @@ elif st.session_state.page == 'contact':
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
 
-# === Bootstrap JS (toggler uchun) ===
-st.markdown("""
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-""", unsafe_allow_html=True)
+# === Bootstrap JS ===
+st.markdown('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>', unsafe_allow_html=True)
