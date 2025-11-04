@@ -152,15 +152,13 @@ st.markdown(f"""
 
     /* Tugmalar */
     .stButton > button {{
-        background: #4b6cb7 !important;
         color: white !important;
-        border-radius: 12px !important;
-        border: 2px solid #4b6cb7 !important;
+        
         transition: all 0.3s ease;
-        font-size: 5rem;
+        font-size: 25rem;
     }}
     .stButton > button:hover {{
-        background: #182848 !important;
+       
         border-color: #182848 !important;
     }}
 
@@ -388,6 +386,7 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
 
 
 
