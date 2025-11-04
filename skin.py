@@ -61,7 +61,7 @@ st.markdown(f"""
         border-radius: 14px !important;
         font-weight: 600 !important;
         font-size: 1rem !important;
-        min-width: 140px !important;
+        max-width: 240px !important;
         height: 52px !important;
         width: 100% !important;
         backdrop-filter: blur(10px) !important;
@@ -360,4 +360,5 @@ elif st.session_state.page == 'contact':
     contact_page()
 
 st.markdown("<div class='footer'>Barcha huquqlar himoyalangan • AI faqat maslahat uchun</div>", unsafe_allow_html=True)
+
 
